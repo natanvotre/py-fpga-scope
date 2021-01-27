@@ -1,12 +1,6 @@
-import sys
 import re
-from select import POLLIN, poll
 from subprocess import PIPE, Popen
-from signal import SIGINT
-from time import sleep
 from pathlib import Path
-from dataclasses import dataclass
-from typing import List
 
 
 class TclBase:
@@ -149,96 +143,14 @@ class TclBase:
         )
         return self.brackets_find(result)
 
-    def get_memory_data(self, id, words, start_addr=0):
+    def read_memory_data(self, id:int, words:int, start_addr=0):
         return self.write_command(
             f'puts [read_content_from_memory -instance_index {id}'
-            f' -start_address {start_addr} -word_count {words} -content_in_hex]'
+            f' -start_address {start_addr} -word_count {words}]'
+        )[:-1]
+
+    def write_memory_data(self, data:str, id:int, words:int, start_addr=0):
+        return self.write_command(
+            f'write_content_to_memory -instance_index {id}'
+            f' -start_address {start_addr} -word_count {words} -content "{data}"'
         )
-
-
-
-@dataclass
-class SourceProbe:
-    instance: int
-    source_len: int
-    probe_len: int
-    name: str
-
-    source=0
-    probe=0
-    tcl:TclBase=None
-    def update(tcl, source: int):
-        # TODO
-        pass
-
-    def read(self, tcl:TclBase=None):
-        tcl = tcl or self.tcl
-        return tcl.get_probe(self.instance)
-
-    @staticmethod
-    def map(str_list: List[str]):
-        return [
-            SourceProbe(*data_str.split(' '))
-            for data_str in str_list
-        ]
-
-@dataclass
-class SystemMemory:
-    instance: int
-    length: int
-    width: int
-    mode: str
-    type_mem: str
-    name: str
-
-    source=0
-    probe=0
-    tcl:TclBase=None
-    def update(tcl, source: int):
-        # TODO
-        pass
-
-    def read(self, tcl:TclBase=None):
-        # TODO
-        pass
-        # tcl = tcl or self.tcl
-        # return tcl.get_probe(self.instance)
-
-    @staticmethod
-    def map(str_list: List[str]):
-        return [
-            SystemMemory(*data_str.split(' '))
-            for data_str in str_list
-        ]
-
-
-class InSystemController(TclBase):
-
-    def list_available_source_probes(self, hardware=None, device=None):
-        result = super().list_available_source_probes(hardware, device)
-        return SourceProbe.map(result)
-
-    def list_available_memories(self, hardware=None, device=None):
-        result = super().list_available_memories(hardware, device)
-        return SystemMemory.map(result)
-
-    def start(self):
-        self.start_source_probe()
-        self.start_system_memory()
-
-
-if __name__ == "__main__":
-    base = InSystemController()
-    print(base.hardware)
-    print(base.device)
-    probes = base.list_available_source_probes()
-    print(probes)
-    base.start_source_probe()
-    print(base.get_probe(probes[0].instance))
-    mems = base.list_available_memories()
-    base.end_source_probe()
-    base.start_system_memory()
-    print(mems)
-    print(base.get_memory_data(mems[0].instance, mems[0].length))
-    base.end_system_memory()
-    sleep(1)
