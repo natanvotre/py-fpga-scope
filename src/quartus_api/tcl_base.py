@@ -15,6 +15,9 @@ class TclBase:
         self.set_hardware(hardware)
         self.set_device(device)
 
+        self.in_system_status = False
+        self.in_memory_status = False
+
     def log(self, msg):
         """ primitive log """
         print(f'Tcl: {msg}')
@@ -90,14 +93,18 @@ class TclBase:
         hardware = hardware or self.hardware
         device = device or self.device
 
-        self.write_command(
-            'start_insystem_source_probe '
-            f'-hardware_name "{hardware}" -device_name "{device}"',
-            has_output=False
-        )
+        if not self.in_system_status:
+            self.in_system_status = True
+            self.write_command(
+                'start_insystem_source_probe '
+                f'-hardware_name "{hardware}" -device_name "{device}"',
+                has_output=False
+            )
 
     def end_source_probe(self):
-        self.write_command('end_insystem_source_probe', has_output=False)
+        if self.in_system_status:
+            self.in_system_status = False
+            self.write_command('end_insystem_source_probe', has_output=False)
 
     def list_available_source_probes(self, hardware=None, device=None):
         hardware = hardware or self.hardware
@@ -124,14 +131,18 @@ class TclBase:
         hardware = hardware or self.hardware
         device = device or self.device
 
-        self.write_command(
-            'begin_memory_edit '
-            f'-hardware_name "{hardware}" -device_name "{device}"',
-            has_output=False,
-        )
+        if not self.in_memory_status:
+            self.in_memory_status = True
+            self.write_command(
+                'begin_memory_edit '
+                f'-hardware_name "{hardware}" -device_name "{device}"',
+                has_output=False,
+            )
 
     def end_system_memory(self):
-        self.write_command('end_memory_edit', has_output=False)
+        if self.in_memory_status:
+            self.in_memory_status = False
+            self.write_command('end_memory_edit', has_output=False)
 
     def list_available_memories(self, hardware=None, device=None):
         hardware = hardware or self.hardware

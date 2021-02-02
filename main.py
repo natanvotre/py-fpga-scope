@@ -5,6 +5,7 @@ from numpy import ndarray
 
 from src.quartus_api import InSystemController
 
+from PyQt5.QtWidgets import QApplication, QLabel
 
 def calc_fft(data: ndarray, N=None, is_complex=False):
     if N is None:
